@@ -2,30 +2,27 @@
 
 package demo.dcbln.predictiveback.ui.samples
 
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.SeekableTransitionState
-import androidx.compose.animation.core.Transition
-import androidx.compose.animation.core.TransitionState
+import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.rememberTransition
-import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,8 +36,6 @@ import demo.dcbln.predictiveback.ui.core.ImageDetails
 import demo.dcbln.predictiveback.ui.core.ImageMap
 import demo.dcbln.predictiveback.ui.core.ImagePreview
 import demo.dcbln.predictiveback.ui.core.ListScreenScaffold
-import demo.dcbln.predictiveback.ui.core.LocalAnimatedVisibilityScope
-import demo.dcbln.predictiveback.ui.core.LocalSharedTransitionScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
@@ -98,12 +93,12 @@ fun SharedElement() {
 private fun SharedTransitionScope.ListScreen(animatedVisibilityScope: AnimatedVisibilityScope, onImageClick: (imageId: String) -> Unit) {
     ListScreenScaffold(
         imageCell = { image ->
-            val clipShape = RoundedCornerShape(16.dp)
+            val cornerRadius by animatedVisibilityScope.transition.animateDp { state -> if (state == EnterExitState.Visible) 16.dp else 0.dp }
+            val clipShape = RoundedCornerShape(cornerRadius)
             ElevatedCard(
                 shape = clipShape,
                 onClick = { onImageClick(image.id) },
                 modifier = Modifier
-                    .clip(RoundedCornerShape(16.dp))
                     .sharedBounds(
                         sharedContentState = rememberSharedContentState(key = "Item ${image.id}"),
                         animatedVisibilityScope = animatedVisibilityScope,
@@ -128,16 +123,18 @@ private fun SharedTransitionScope.ListScreen(animatedVisibilityScope: AnimatedVi
 
 @Composable
 private fun SharedTransitionScope.DetailScreen(animatedVisibilityScope: AnimatedVisibilityScope, imageId: String) {
+
     Surface(
         modifier = Modifier.sharedBounds(
             sharedContentState = rememberSharedContentState(key = "Item $imageId"),
             animatedVisibilityScope = animatedVisibilityScope,
-            resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
+            resizeMode = SharedTransitionScope.ResizeMode.ScaleToBounds(),
             enter = fadeIn(),
             exit = fadeOut(),
         )
     ) {
         DetailsScreenScaffold(imageId) { image ->
+            val cornerRadius by animatedVisibilityScope.transition.animateDp { state -> if (state == EnterExitState.Visible) 0.dp else 16.dp }
             ImagePreview(
                 image = image,
                 modifier = Modifier
@@ -145,7 +142,8 @@ private fun SharedTransitionScope.DetailScreen(animatedVisibilityScope: Animated
                     .height(400.dp)
                     .sharedElement(
                         state = rememberSharedContentState(key = "Image $imageId"),
-                        animatedVisibilityScope = animatedVisibilityScope
+                        animatedVisibilityScope = animatedVisibilityScope,
+                        clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(cornerRadius))
                     )
             )
 
