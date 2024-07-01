@@ -21,15 +21,8 @@ import cafe.adriel.voyager.navigator.Navigator
 import java.io.Serializable
 
 interface TransitionAware : Screen {
-
-    @Composable
-    fun Content(sharedTransitionScope: SharedTransitionScope, animatedVisibilityScope: AnimatedVisibilityScope)
-
-    @Composable
-    override fun Content(): Nothing {
-        error("Use the override with receiver")
-    }
-
+    var sharedTransitionScope: SharedTransitionScope
+    var animatedVisibilityScope: AnimatedVisibilityScope
 }
 
 

@@ -105,10 +105,10 @@ fun PredictiveBackScreenTransition(
         ) { screen ->
             navigator.saveableState("transition", screen) {
                 if (screen is TransitionAware) {
-                    screen.Content(this@SharedTransitionLayout, this)
-                } else {
-                    screen.Content()
+                    screen.sharedTransitionScope = this@SharedTransitionLayout
+                    screen.animatedVisibilityScope = this
                 }
+                screen.Content()
             }
         }
     }
