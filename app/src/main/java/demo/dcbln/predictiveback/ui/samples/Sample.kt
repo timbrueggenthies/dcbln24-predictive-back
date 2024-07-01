@@ -24,9 +24,9 @@ enum class Sample(val title: String, val category: Category, val content: @Compo
     CircularReveal("Circular Reveal", Category.GraphicalEffects, { CircularReveal() }),
     ScaleContentDown("Scale Content Down", Category.GraphicalEffects, { ScaleContentDown() }),
     PreventBack("Prevent Back", Category.GraphicalEffects, { IndicateUnableToGoBack() }),
-    DissolveShader("Dissolve Shader", Category.GraphicalEffects, { DissolveShader() }),
+    // TODO DissolveShader("Dissolve Shader", Category.GraphicalEffects, { DissolveShader() }),
     RgbDissolve("RGB Dissolve", Category.GraphicalEffects, { RgbDissolve() }),
-    PageTurning("Page Turning", Category.GraphicalEffects, { demo.dcbln.predictiveback.ui.samples.PageTurningShader() }),
+    // TODO PageTurning("Page Turning", Category.GraphicalEffects, { PageTurningShader() }),
     AndroidxNavigation("Androidx Navigation", Category.Integration, { AndroidxNavigationSample() }),
     VoyagerIntegration("Voyager Integration", Category.Integration, { VoyagerNavigationSample() }),
 }
