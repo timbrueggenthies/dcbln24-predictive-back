@@ -21,7 +21,7 @@ enum class Sample(val title: String, val category: Category, val content: @Compo
     ShaderTesting("Shader Testing", Category.Basics, { ShaderTesting() }),
     BottomSheet("Bottom Sheet", Category.Basics, { BottomSheetSample() }),
     SharedElement("Shared Element", Category.GraphicalEffects, { SharedElement() }),
-    CircularReveal("Circular Reveal", Category.GraphicalEffects, { CircularReveal() }),
+    Droplet("Droplet", Category.GraphicalEffects, { Droplet() }),
     ScaleContentDown("Scale Content Down", Category.GraphicalEffects, { ScaleContentDown() }),
     PreventBack("Prevent Back", Category.GraphicalEffects, { IndicateUnableToGoBack() }),
     // TODO DissolveShader("Dissolve Shader", Category.GraphicalEffects, { DissolveShader() }),

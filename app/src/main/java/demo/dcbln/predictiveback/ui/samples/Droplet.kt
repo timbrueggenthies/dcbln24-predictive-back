@@ -41,7 +41,7 @@ import org.intellij.lang.annotations.Language
 import androidx.compose.ui.graphics.RenderEffect as ComposeRenderEffect
 
 @Composable
-fun CircularReveal() {
+fun Droplet() {
     var selectedImageId: String? by remember { mutableStateOf(null) }
     Box {
         ListScreen(onImageClick = { selectedImageId = it })
@@ -69,25 +69,11 @@ private fun DetailScreen(
     onScreenFinished: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val runtimeShader = remember { RuntimeShader(CIRCULAR_REVEAL_SHADER) }
-    fun createRenderEffect(): ComposeRenderEffect {
-        return RenderEffect.createRuntimeShaderEffect(runtimeShader, "content").asComposeRenderEffect()
-    }
-
-    var effect by remember(runtimeShader) { mutableStateOf(createRenderEffect()) }
-
     var size: IntSize by remember { mutableStateOf(IntSize.Zero) }
-
-    val radiusAnimation = remember { Animatable(0f) }
 
     val progress = remember { Animatable(0f) }
     var fingerY: Float by remember { mutableFloatStateOf(-1f) }
     var edge: Int by remember { mutableIntStateOf(BackEventCompat.EDGE_LEFT) }
-
-    LaunchedEffect(radiusAnimation.value) {
-        runtimeShader.setFloatUniform("radius", radiusAnimation.value)
-        effect = createRenderEffect()
-    }
 
     PredictiveBackHandler { events ->
         progress.snapTo(0f)
@@ -95,14 +81,10 @@ private fun DetailScreen(
         try {
             events.collect { event ->
                 edge = event.swipeEdge
-                progress.snapTo(event.progress)
+                progress.snapTo(event.progress * 0.3f)
                 if (fingerY == -1f) fingerY = event.touchY
-                runtimeShader.setFloatUniform("fingerY", event.touchY)
-                radiusAnimation.snapTo(size.width * event.progress)
-                effect = createRenderEffect()
             }
             progress.animateTo(1f)
-            //radiusAnimation.animateTo(size.height.toFloat())
             onScreenFinished()
         } finally {
             progress.snapTo(0f)
@@ -123,6 +105,7 @@ private fun DetailScreen(
                     this,
                     inclusive = false
                 ),
+                alpha = 1f - progress.value,
                 color = Color(0x605352ED)
             )
         }
@@ -140,7 +123,6 @@ private fun DetailScreen(
                         shape = RectangleShape
                     }
                 }
-            //.graphicsLayer { renderEffect = effect }
         )
     }
 }
@@ -160,7 +142,7 @@ private fun createDropPath(
     density: Density,
     inclusive: Boolean = true,
 ): Path {
-    val rightEdge = ((4 * progress).coerceAtMost(1f) * with(density) { 64.dp.toPx() }).coerceAtLeast(2f)
+    val rightEdge = (progress * size.width).coerceIn(2f, size.width - 2f)
     val dropHeight = size.height / 6f
     val dropCenter = y
 
@@ -171,7 +153,7 @@ private fun createDropPath(
                 if (inclusive) 0f else width, height,
                 width - rightEdge, height,
                 width - rightEdge, dropCenter + dropHeight / 2f,
-                width - rightEdge - progress * 400f, dropCenter,
+                (width - rightEdge - progress * 1000f).coerceAtLeast(2f), dropCenter,
                 width - rightEdge, dropCenter - dropHeight / 2f,
                 width - rightEdge, 0f,
             )
@@ -183,7 +165,7 @@ private fun createDropPath(
                 if (inclusive) width else 0f, height,
                 rightEdge, height,
                 rightEdge, dropCenter + dropHeight / 2f,
-                rightEdge + progress * 400f, dropCenter,
+                (rightEdge + progress * 1000f).coerceAtMost(size.width - 2f), dropCenter,
                 rightEdge, dropCenter - dropHeight / 2f,
                 rightEdge, 0f,
             )
@@ -208,26 +190,3 @@ private fun createDropPath(
 
     return polygon.toPath().asComposePath()
 }
-
-@Language(value = "AGSL")
-private const val CIRCULAR_REVEAL_SHADER = """
-  //uniform float2 resolution;
-  uniform shader content;
-  uniform float radius;
-  uniform float fingerY;
-  
-  half4 main(float2 fragCoord) {
-      // Normalized pixel coordinates (from 0 to 1)
-      //float2 uv = fragCoord/resolution.xy;
-      float minDimension = radius;
-      
-      float dist = length(fragCoord - float2(0, fingerY));
-      float alpha = 0.0;
-      
-      if (dist > radius) {
-        return content.eval(fragCoord);
-      } else {
-        return half4(0.0, 0.0, 0.0, 0.0);
-      }
-  }
-"""
