@@ -3,6 +3,7 @@ package demo.dcbln.predictiveback.ui.samples
 import androidx.activity.BackEventCompat
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -75,12 +76,14 @@ private fun DetailScreen(imageId: String, onClose: () -> Unit) {
         }
     }
 
+    val cornerRadius by animateDpAsState(if (scale.value == 1f) 0.dp else 32.dp)
+
     BasicDetailScreen(
         imageId = imageId,
         modifier = Modifier
             .graphicsLayer {
                 clip = true
-                shape = if (scale.value == 0f) RectangleShape else RoundedCornerShape(32.dp)
+                shape = RoundedCornerShape(cornerRadius)
                 scaleX = scale.value
                 scaleY = scale.value
                 val pivotX = if (swipeEdge == BackEventCompat.EDGE_LEFT) 0.8f else 0.2f
