@@ -10,6 +10,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
@@ -22,6 +23,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -48,7 +50,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -73,14 +74,14 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun SampleList(onSampleSelect: (Sample) -> Unit) {
     Scaffold(
-        topBar = { PredictiveBackAppBar() }
+        topBar = { PredictiveBackAppBar() },
     ) { padding ->
         LazyVerticalGrid(
             contentPadding = WindowInsets.systemBars.asPaddingValues(),
             columns = GridCells.Fixed(2),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.padding(padding).padding(horizontal = 16.dp)
+            modifier = Modifier.padding(padding).padding(horizontal = 16.dp),
         ) {
             Sample.entries.groupBy { it.category }.forEach { (category, samples) ->
 
@@ -88,64 +89,78 @@ private fun SampleList(onSampleSelect: (Sample) -> Unit) {
                     Text(
                         text = category.title,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        style = MaterialTheme.typography.headlineMedium
+                        style = MaterialTheme.typography.headlineMedium,
                     )
                 }
                 items(samples) { sample ->
                     ElevatedCard(
                         onClick = { onSampleSelect(sample) },
-                        modifier = Modifier
+                        modifier = Modifier,
                     ) {
                         Text(
                             text = sample.title,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(1f)
-                                .padding(16.dp)
-                                .wrapContentSize(Alignment.CenterStart)
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .aspectRatio(1f)
+                                    .padding(16.dp)
+                                    .wrapContentSize(Alignment.CenterStart),
                         )
                     }
                 }
             }
+
+            item(span = { GridItemSpan(2) }) { UseGalleryToggle() }
         }
     }
+}
 
+@Composable
+fun UseGalleryToggle() {
+    val context = LocalContext.current
+    val dataStore = remember(context) { context.dataStore }
+    val gallerySwitchChecked by dataStore.data.map { it[useGallery] ?: false }.collectAsState(initial = false)
+    val coroutineScope = rememberCoroutineScope()
+    val permissionRequest =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                coroutineScope.launch {
+                    dataStore.edit { settings ->
+                        settings[useGallery] = true
+                    }
+                }
+            }
+        }
+
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .toggleable(
+                    value = gallerySwitchChecked,
+                    onValueChange = { checked ->
+                        if (checked) {
+                            permissionRequest.launch(Manifest.permission.READ_MEDIA_IMAGES)
+                        } else {
+                            coroutineScope.launch {
+                                dataStore.edit { settings ->
+                                    settings[useGallery] = false
+                                }
+                            }
+                        }
+                    },
+                )
+                .padding(16.dp),
+    ) {
+        Text("Use the images from your gallery", modifier = Modifier.weight(1f))
+        Switch(checked = gallerySwitchChecked, onCheckedChange = null)
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PredictiveBackAppBar() {
-    val context = LocalContext.current
-    val dataStore = remember(context) { context.dataStore }
-    val gallerySwitchChecked by dataStore.data.map { it[useGallery] ?: false }.collectAsState(initial = false)
-    val coroutineScope = rememberCoroutineScope()
-    val permissionRequest = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) {
-            coroutineScope.launch {
-                dataStore.edit { settings ->
-                    settings[useGallery] = true
-                }
-            }
-        }
-    }
-
     TopAppBar(
-        title = { Text("Predictive App Samples") },
-        actions = {
-            Switch(
-                checked = gallerySwitchChecked,
-                onCheckedChange = { checked ->
-                    if (checked) {
-                        permissionRequest.launch(Manifest.permission.READ_MEDIA_IMAGES)
-                    } else {
-                        coroutineScope.launch {
-                            dataStore.edit { settings ->
-                                settings[useGallery] = false
-                            }
-                        }
-                    }
-                }
-            )
-        }
+        title = { Text("Predictive Back Samples") },
     )
 }
