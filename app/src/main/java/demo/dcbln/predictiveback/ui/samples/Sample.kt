@@ -18,7 +18,7 @@ import demo.dcbln.predictiveback.ui.test.ShaderTesting
 
 enum class Sample(val title: String, val category: Category, val content: @Composable () -> Unit) {
     DebugPredictiveBack("Demo", Category.Basics, { DebugSample() }),
-    ShaderTesting("Shader Testing", Category.Basics, { ShaderTesting() }),
+    // TODO ShaderTesting("Shader Testing", Category.Basics, { ShaderTesting() }),
     BottomSheet("Bottom Sheet", Category.Basics, { BottomSheetSample() }),
     SharedElement("Shared Element", Category.GraphicalEffects, { SharedElement() }),
     Droplet("Droplet", Category.GraphicalEffects, { Droplet() }),
